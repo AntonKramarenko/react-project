@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { setToLocalStorage } from '../../utils';
+// import { isThisTypeNode } from 'typescript';
+import { getFromLocalStorage, setToLocalStorage } from '../../utils';
 
+const { REACT_APP_API_KEY, REACT_APP_APP_NAME, REACT_APP_REDIRECT_URL, REACT_APP_SCOPE } = process.env
 
 const TOKEN_STORAGE_KEY = 'TOKEN';
 
@@ -29,27 +31,46 @@ export class App extends React.Component<any, AppState> {
 
     }
 
-    public componentDidMount() {
-        const token = window.location.hash.split('=')[1];
-        if (token) {
-            this.setToken(token);
-        }
+    private async getToken() {
+        const token = await getFromLocalStorage(TOKEN_STORAGE_KEY);
+        return token;
+    }
+
+    private getTokenFromUrl() {
+        return window.location.hash.split('=')[1];
+    }
+
+    private isLoggedIn() {
+        return !!this.state.token
+    }
+
+
+    private renderHeader() {
+        const requestUrl = `https://trello.com/1/authorize?return_url=${REACT_APP_REDIRECT_URL}&expiration=1day&name=${REACT_APP_APP_NAME}&scope=${REACT_APP_SCOPE}&response_type=token&key=${REACT_APP_API_KEY}`
+
+
+        return <header>
+            {this.isLoggedIn() ? 'Hello user' : <a href={requestUrl}>Login with trello account</a>}
+        </header>
+    }
+
+    private renderContent() {
+        return <main>
+            {this.isLoggedIn() ? <h2>Some secret content</h2> : 'Please log in!'}
+        </main>
+    }
+
+
+    public async componentDidMount() {
+        // const savedToken = await this.getToken();
+        const newToken = this.getTokenFromUrl();
+        this.setToken(newToken)
     }
 
     public render() {
-        const redirectUrl = 'http://localhost:3000';
-        const scope = ['read', 'write', 'account'];
-        const appName = 'AntonK_React_trello';
-        const key = '0d166e843bcba6197db9b3a77d4a19e3';
-        const requestUrl = `https://trello.com/1/authorize?return_url=${redirectUrl}&expiration=1day&name=${appName}&scope=${scope.join(',')}&response_type=token&key=${key}`
-
-
-
         return <div>
-            <header>
-                <a href={requestUrl}>Login with trello account</a>
-            </header>
-            <h2>Please login</h2>
+            {this.renderHeader()}
+            {this.renderContent()}
         </div>
     }
 }
