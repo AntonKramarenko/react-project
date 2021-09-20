@@ -1,13 +1,12 @@
 import * as React from 'react';
+import { Route, Link } from 'react-router-dom';
 // import { isThisTypeNode } from 'typescript';
 import { getFromLocalStorage, setToLocalStorage } from '../../utils';
+import { Dashboard } from '../Dashboard';
+import { Login } from '../Login';
 
 
 
-const { REACT_APP_API_KEY } = process.env
-const { REACT_APP_APP_NAME } = process.env
-const { REACT_APP_REDIRECT_URL } = process.env
-const { REACT_APP_SCOPE } = process.env
 
 
 
@@ -53,23 +52,24 @@ export class App extends React.Component<any, AppState> {
 
 
     private renderHeader() {
-        const requestUrl = `https://trello.com/1/authorize?return_url=${REACT_APP_REDIRECT_URL}&expiration=1day&name=${REACT_APP_APP_NAME}&scope=${REACT_APP_SCOPE}&response_type=token&key=${REACT_APP_API_KEY}`
-
-
         return <header>
-            {this.isLoggedIn() ? 'Hello user' : <a href={requestUrl}>Login with trello account</a>}
+            <Link to='/dashboard'>Dashboard</Link>
+            <Link to='/'>Home</Link>
         </header>
     }
 
     private renderContent() {
         return <main>
-            {this.isLoggedIn() ? <h2>Some secret content</h2> : 'Please log in!'}
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/" exact={true} component={Login} />
+
+            <h2>Test</h2>
         </main>
     }
 
 
     public async componentDidMount() {
-        // const savedToken = await this.getToken();
+
         const newToken = this.getTokenFromUrl();
         this.setToken(newToken)
     }
