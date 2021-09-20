@@ -2,7 +2,14 @@ import * as React from 'react';
 // import { isThisTypeNode } from 'typescript';
 import { getFromLocalStorage, setToLocalStorage } from '../../utils';
 
-const { REACT_APP_API_KEY, REACT_APP_APP_NAME, REACT_APP_REDIRECT_URL, REACT_APP_SCOPE } = process.env
+
+
+const { REACT_APP_API_KEY } = process.env
+const { REACT_APP_APP_NAME } = process.env
+const { REACT_APP_REDIRECT_URL } = process.env
+const { REACT_APP_SCOPE } = process.env
+
+
 
 const TOKEN_STORAGE_KEY = 'TOKEN';
 
