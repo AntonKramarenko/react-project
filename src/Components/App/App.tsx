@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Route, Link } from 'react-router-dom';
+import { Route, Link, RouteComponentProps, Redirect, Switch } from 'react-router-dom';
 // import { isThisTypeNode } from 'typescript';
 import { getFromLocalStorage, setToLocalStorage } from '../../utils';
 import { Dashboard } from '../Dashboard';
-import { Login } from '../Login';
-
-
-
+// import { routes } from './routes';
+// import { AppRoute } from './routes'
+import { routes } from './routes';
+import { AppRoute } from '../App/routes'
 
 
 
@@ -36,16 +36,6 @@ export class App extends React.Component<any, AppState> {
         await setToLocalStorage(TOKEN_STORAGE_KEY, token);
 
     }
-
-    private async getToken() {
-        const token = await getFromLocalStorage(TOKEN_STORAGE_KEY);
-        return token;
-    }
-
-    private getTokenFromUrl() {
-        return window.location.hash.split('=')[1];
-    }
-
     private isLoggedIn() {
         return !!this.state.token
     }
@@ -53,25 +43,21 @@ export class App extends React.Component<any, AppState> {
 
     private renderHeader() {
         return <header>
-            <Link to='/dashboard'>Dashboard</Link>
-            <Link to='/'>Home</Link>
+            {routes.map((route: AppRoute, i: number) => route.isHidden ? null : <Link key={i} to={route.path}>{route.title}</Link>)}
         </header>
     }
 
     private renderContent() {
         return <main>
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/" exact={true} component={Login} />
-
-            <h2>Test</h2>
+            <Switch>
+                {routes.map((route: any, i: number) => <Route
+                    exact={route.exact}
+                    key={i} path={route.path}
+                    render={(props) => route.render({ ...this.props, token: this.state.token })} />
+                )}
+                <Redirect to='/404' />
+            </Switch>
         </main>
-    }
-
-
-    public async componentDidMount() {
-
-        const newToken = this.getTokenFromUrl();
-        this.setToken(newToken)
     }
 
     public render() {
