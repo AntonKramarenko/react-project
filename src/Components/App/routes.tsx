@@ -29,11 +29,6 @@ export const routes: Array<AppRoute> = [
         title: 'Dashboard'
     },
     {
-        path: '/oauth',
-        isHidden: true,
-        render: (props: RouteChildrenProps) => <OAuth {...props} />
-    },
-    {
         path: '/',
         isHidden: true,
         exact: true,

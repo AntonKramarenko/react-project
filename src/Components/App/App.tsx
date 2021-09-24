@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Route, Link, RouteComponentProps, Redirect, Switch } from 'react-router-dom';
+import { Route, Link, RouteComponentProps, Redirect, Switch, RouteChildrenProps } from 'react-router-dom';
 // import { isThisTypeNode } from 'typescript';
 import { getFromLocalStorage, setToLocalStorage } from '../../utils';
 import { Dashboard } from '../Dashboard';
@@ -7,6 +7,7 @@ import { Dashboard } from '../Dashboard';
 // import { AppRoute } from './routes'
 import { routes } from './routes';
 import { AppRoute } from '../App/routes'
+import { OAuth } from '../OAuth';
 
 
 
@@ -31,11 +32,11 @@ export class App extends React.Component<any, AppState> {
     }
 
 
-    private async setToken(token: string) {
+    private setToken = (token: string) => {
         this.setState({ token });
-        await setToLocalStorage(TOKEN_STORAGE_KEY, token);
-
     }
+
+
     private isLoggedIn() {
         return !!this.state.token
     }
@@ -53,8 +54,10 @@ export class App extends React.Component<any, AppState> {
                 {routes.map((route: any, i: number) => <Route
                     exact={route.exact}
                     key={i} path={route.path}
-                    render={(props) => route.render({ ...this.props, token: this.state.token })} />
+                    render={(props) => route.render({ ...props })} />
                 )}
+
+                <Route path='/oauth' render={(props: RouteChildrenProps) => <OAuth {...props} onSetToken={this.setToken} />} />
                 <Redirect to='/404' />
             </Switch>
         </main>
