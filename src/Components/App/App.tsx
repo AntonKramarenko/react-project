@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Route, Link, RouteComponentProps, Redirect, Switch, RouteChildrenProps } from 'react-router-dom';
+import { Route, Link, RouteComponentProps, Redirect, Switch, RouteChildrenProps, withRouter } from 'react-router-dom';
 // import { isThisTypeNode } from 'typescript';
 import { getFromLocalStorage, setToLocalStorage } from '../../utils';
 import { Dashboard } from '../Dashboard';
@@ -8,10 +8,12 @@ import { Dashboard } from '../Dashboard';
 import { routes } from './routes';
 import { AppRoute } from '../App/routes'
 import { OAuth } from '../OAuth';
+import { ProtectedRoute } from '../ProtectedRoute'
 
 
 
 const TOKEN_STORAGE_KEY = 'TOKEN';
+const { REACT_APP_API_KEY, REACT_APP_APP_NAME, REACT_APP_REDIRECT_URL, REACT_APP_SCOPE } = process.env;
 
 interface Board {
     id: string;
@@ -23,21 +25,67 @@ interface Board {
 interface AppState {
     token: string;
     boards: Array<Board>
+    userProfile: any;
 }
 
-export class App extends React.Component<any, AppState> {
-    public state = {
-        token: '',
-        boards: []
+interface AppProps extends RouteComponentProps {
+
+}
+
+const INITIAL_STATE = {
+    token: '',
+    userProfile: undefined,
+    boards: []
+}
+
+class App extends React.Component<AppProps, AppState> {
+    public state = INITIAL_STATE;
+
+
+    componentDidMount() {
+        this.getToken()
     }
 
+
+    private async getToken() {
+        if (this.state.token) {
+            return;
+        }
+
+        const token = getFromLocalStorage(TOKEN_STORAGE_KEY);
+        if (!token) {
+            return this.navigateToLogin()
+        }
+        const url = `https://api.trello.com/1/members/me?key=${REACT_APP_API_KEY}&token=${token}`;
+        const response = await fetch(url);
+        if (response.ok === true && response.status === 200) {
+            const userProfile = await response.json()
+            this.setProfile(userProfile);
+            this.setToken(token)
+            return this.navigateToDashboard();
+        }
+        return this.navigateToLogin();
+    }
+
+    private navigateToDashboard() {
+        this.props.history.push('/dashboard');
+    }
+
+    private navigateToLogin() {
+        this.props.history.push('/login');
+    }
+
+    private setProfile(userProfile: any) {
+        this.setState({ userProfile });
+    }
 
     private setToken = (token: string) => {
         this.setState({ token });
+        setToLocalStorage(TOKEN_STORAGE_KEY, token)
     }
 
 
-    private isLoggedIn() {
+    private get isLoggedIn() {
         return !!this.state.token
     }
 
@@ -45,22 +93,40 @@ export class App extends React.Component<any, AppState> {
     private renderHeader() {
         return <header>
             {routes.map((route: AppRoute, i: number) => route.isHidden ? null : <Link key={i} to={route.path}>{route.title}</Link>)}
+            <button onClick={this.logOut}>Log Out</button>
         </header>
+    }
+
+    private logOut = () => {
+        this.setState(INITIAL_STATE)
+        this.navigateToLogin();
     }
 
     private renderContent() {
         return <main>
             <Switch>
-                {routes.map((route: any, i: number) => <Route
-                    exact={route.exact}
-                    key={i} path={route.path}
-                    render={(props) => route.render({ ...props })} />
-                )}
-
+                {routes.map(this.renderRoute)}
                 <Route path='/oauth' render={(props: RouteChildrenProps) => <OAuth {...props} onSetToken={this.setToken} />} />
                 <Redirect to='/404' />
             </Switch>
         </main>
+    }
+
+    private renderRoute = (route: AppRoute, i: number) => {
+        if (route.isProtected) {
+            return <ProtectedRoute
+                exact={route.exact}
+                key={i}
+                path={route.path}
+                render={route.render}
+                isAuthenticated={this.isLoggedIn} />
+        } else {
+            return <Route
+                exact={route.exact}
+                key={i}
+                path={route.path}
+                render={(props) => route.render({ ...props })} />
+        }
     }
 
     public render() {
@@ -70,3 +136,8 @@ export class App extends React.Component<any, AppState> {
         </div>
     }
 }
+
+const AppWithRouter = withRouter(App);
+
+
+export { AppWithRouter as App }

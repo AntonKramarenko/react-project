@@ -10,7 +10,7 @@ export class Login extends React.Component {
 
         return <div>
             <a href={requestUrl}>Login with trello account</a>
-            <h2>Please ligin</h2>
+            <h2>Please login</h2>
         </div>
     }
 }

@@ -13,6 +13,7 @@ export interface AppRoute {
     title?: string;
     isHidden?: boolean;
     exact?: boolean;
+    isProtected?: boolean
 
 
 }
@@ -25,8 +26,9 @@ export const routes: Array<AppRoute> = [
     },
     {
         path: '/dashboard',
-        render: (props: RouteChildrenProps) => <Dashboard {...props} />,
-        title: 'Dashboard'
+        title: 'Dashboard',
+        isProtected: true,
+        render: (props: RouteChildrenProps) => <Dashboard {...props} />
     },
     {
         path: '/',
