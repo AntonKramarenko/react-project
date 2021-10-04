@@ -6,7 +6,8 @@ import { Dashboard } from '../Dashboard';
 // import { routes } from './routes';
 // import { AppRoute } from './routes'
 import { routes } from './routes';
-import { AppRoute } from '../App/routes'
+import { ROUTES_URLS } from './routes';
+import { AppRoute } from '../App/routes';
 import { OAuth } from '../OAuth';
 import { ProtectedRoute } from '../ProtectedRoute'
 
@@ -38,6 +39,11 @@ const INITIAL_STATE = {
     boards: []
 }
 
+
+interface CustomToken {
+    token: string, expireIn: number
+}
+
 class App extends React.Component<AppProps, AppState> {
     public state = INITIAL_STATE;
 
@@ -52,7 +58,7 @@ class App extends React.Component<AppProps, AppState> {
             return;
         }
 
-        const token = getFromLocalStorage(TOKEN_STORAGE_KEY);
+        const { token } = getFromLocalStorage<CustomToken>(TOKEN_STORAGE_KEY);
         if (!token) {
             return this.navigateToLogin()
         }
@@ -68,11 +74,11 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     private navigateToDashboard() {
-        this.props.history.push('/dashboard');
+        this.props.history.push(ROUTES_URLS.DASHBOARD);
     }
 
     private navigateToLogin() {
-        this.props.history.push('/login');
+        this.props.history.push(ROUTES_URLS.LOGIN);
     }
 
     private setProfile(userProfile: any) {
@@ -81,7 +87,7 @@ class App extends React.Component<AppProps, AppState> {
 
     private setToken = (token: string) => {
         this.setState({ token });
-        setToLocalStorage(TOKEN_STORAGE_KEY, token)
+        setToLocalStorage<CustomToken>(TOKEN_STORAGE_KEY, { token, expireIn: Date.now() })
     }
 
 
@@ -106,8 +112,8 @@ class App extends React.Component<AppProps, AppState> {
         return <main>
             <Switch>
                 {routes.map(this.renderRoute)}
-                <Route path='/oauth' render={(props: RouteChildrenProps) => <OAuth {...props} onSetToken={this.setToken} />} />
-                <Redirect to='/404' />
+                <Route path={ROUTES_URLS.OAUTH} render={(props: RouteChildrenProps) => <OAuth {...props} onSetToken={this.setToken} />} />
+                <Redirect to={ROUTES_URLS.NOT_FOUND} />
             </Switch>
         </main>
     }
